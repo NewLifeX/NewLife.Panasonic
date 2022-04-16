@@ -1,12 +1,14 @@
-﻿using NewLife.IoT.Protocols;
+﻿using System.ComponentModel;
+using NewLife.IoT.Protocols;
 
 namespace NewLife.IoT.Drivers;
 
 /// <summary>
-/// ModbusTcp协议封装
+/// 松下PLC协议封装
 /// </summary>
-[Driver("ModbusTcp")]
-public class ModbusTcpDriver : ModbusDriver, IDriver
+[Driver("PanasonicPLC")]
+[DisplayName("松下PLC")]
+public class PanasonicDriver : ModbusDriver, IDriver
 {
     #region 方法
     /// <summary>

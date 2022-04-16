@@ -5,7 +5,7 @@ namespace NewLife.IoT.Drivers;
 /// <summary>
 /// Modbus节点
 /// </summary>
-public class ModbusNode : INode
+public class PanasonicNode : INode
 {
     /// <summary>主机地址</summary>
     public Byte Host { get; set; }
