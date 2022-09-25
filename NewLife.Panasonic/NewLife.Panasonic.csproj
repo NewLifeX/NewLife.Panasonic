@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
     <AssemblyTitle>松下PLC协议</AssemblyTitle>
     <Description>松下PLC协议</Description>
     <Company>新生命开发团队</Company>
@@ -15,6 +15,8 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -42,9 +44,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="9.0.2022.415-beta0444" />
-    <PackageReference Include="NewLife.IoT" Version="1.0.2022.415-beta0506" />
-    <PackageReference Include="NewLife.Modbus" Version="1.0.2022.415-beta0508" />
+    <PackageReference Include="NewLife.Core" Version="10.0.2022.923-beta0329" />
+    <PackageReference Include="NewLife.IoT" Version="1.2.2022.925-beta0135" />
+    <PackageReference Include="NewLife.Modbus" Version="1.2.2022.901" />
   </ItemGroup>
 
   <ItemGroup>

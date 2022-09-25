@@ -7,6 +7,9 @@ namespace NewLife.IoT.Drivers;
 /// </summary>
 public class PanasonicNode : INode
 {
+    /// <summary>Modbus对象</summary>
+    public Modbus Modbus { get; set; }
+
     /// <summary>主机地址</summary>
     public Byte Host { get; set; }
 
@@ -17,5 +20,11 @@ public class PanasonicNode : INode
     public FunctionCodes WriteCode { get; set; }
 
     /// <summary>通道</summary>
-    public IChannel Channel { get; set; }
+    public IDriver Driver { get; set; }
+
+    /// <summary>设备</summary>
+    public IDevice Device { get; set; }
+
+    /// <summary>参数</summary>
+    public IDriverParameter Parameter { get; set; }
 }
