@@ -17,7 +17,7 @@ public class PanasonicDriver : ModbusDriver, IDriver
     /// 创建驱动参数对象，可序列化成Xml/Json作为该协议的参数模板
     /// </summary>
     /// <returns></returns>
-    public override IDriverParameter CreateParameter() => new PanasonicParameter
+    public override IDriverParameter GetDefaultParameter() => new PanasonicParameter
     {
         Server = "127.0.0.1:502",
 
