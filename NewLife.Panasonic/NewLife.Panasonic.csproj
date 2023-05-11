@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net461;net45</TargetFrameworks>
     <AssemblyTitle>松下PLC协议</AssemblyTitle>
     <Description>松下PLC协议</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2022 新生命开发团队</Copyright>
+    <Copyright>©2002-2023 新生命开发团队</Copyright>
     <VersionPrefix>1.0</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
@@ -44,17 +44,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.0.2022.1001" />
-    <PackageReference Include="NewLife.IoT" Version="1.4.2022.1001" />
-    <PackageReference Include="NewLife.Modbus" Version="1.4.2022.1001" />
+    <PackageReference Include="NewLife.Core" Version="10.3.2023.503" />
+    <PackageReference Include="NewLife.IoT" Version="1.8.2023.511" />
+    <PackageReference Include="NewLife.Modbus" Version="1.6.2023.511" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Protocols\" />
   </ItemGroup>
 
 </Project>
