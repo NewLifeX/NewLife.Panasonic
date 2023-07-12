@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel;
 using NewLife.IoT.Protocols;
-using NewLife.Panasonic.Drivers;
-using NewLife.Serialization;
 
 namespace NewLife.IoT.Drivers;
 
@@ -18,12 +16,12 @@ public class PanasonicDriver : ModbusDriver, IDriver
     /// </summary>
     /// <param name="device">逻辑设备</param>
     /// <param name="node">设备节点</param>
-    /// <param name="parameters">参数</param>
+    /// <param name="parameter">参数</param>
     /// <returns></returns>
-    protected override Modbus CreateModbus(IDevice device, ModbusNode node, IDictionary<String, Object> parameters)
+    protected override Modbus CreateModbus(IDevice device, ModbusNode node, ModbusParameter parameter)
     {
-        var p = JsonHelper.Convert<ModbusTcpParameter>(parameters);
-        if (p.Server.IsNullOrEmpty()) throw new ArgumentException("参数中未指定地址Server");
+        var p = parameter as ModbusTcpParameter;
+        if (p == null || p.Server.IsNullOrEmpty()) throw new ArgumentException("参数中未指定地址Server");
 
         node.Parameter = p;
 
