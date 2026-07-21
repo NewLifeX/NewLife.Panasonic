@@ -6,7 +6,36 @@
 ![Nuget](https://img.shields.io/nuget/v/NewLife.Panasonic?logo=nuget)
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/NewLife.Panasonic?label=dev%20nuget&logo=nuget)
 
-松下PLC协议  
+松下PLC协议。基于 NewLife.IoT 标准框架和 Modbus TCP 协议，为 .NET 应用提供松下 PLC 设备的通信驱动。
+
+## 快速开始
+
+```xml
+<PackageReference Include="NewLife.Panasonic" Version="1.0.*" />
+```
+
+```csharp
+// 创建驱动
+var driver = new PanasonicDriver();
+
+// 配置参数
+var param = new PanasonicParameter
+{
+    Server = "192.168.1.100:502",
+    Host = 1,
+};
+
+// 打开通道
+var node = driver.Open(null, param);
+```
+
+## 文档
+
+| 文档 | 说明 |
+|------|------|
+| [需求文档](Doc/需求文档.md) | 愿景、核心目标与功能需求 |
+| [功能清单](Doc/功能清单.md) | 实现/测试/注释三维状态追踪 |
+| [架构设计](Doc/架构设计.md) | 分层、组件、流程与设计决策 |
 
 源码： https://github.com/NewLifeX/NewLife.Panasonic  
 Nuget：NewLife.Panasonic  
