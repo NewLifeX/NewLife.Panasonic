@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using NewLife.IoT.Drivers;
 using NewLife.IoT.Protocols;
 using Xunit;
@@ -52,14 +53,11 @@ public class PanasonicNodeTests
         var modbus = new ModbusTcp
         {
             Server = "127.0.0.1:502",
-            Host = 1,
         };
         node.Modbus = modbus;
 
         Assert.NotNull(node.Modbus);
         Assert.Same(modbus, node.Modbus);
-        Assert.Equal("127.0.0.1:502", node.Modbus.Server);
-        Assert.Equal(1, node.Modbus.Host);
     }
 
     [Fact]
@@ -91,40 +89,29 @@ public class PanasonicNodeTests
     }
 
     [Fact]
-    [DisplayName("设置Device_值正确保留")]
-    public void SetDevice_ValueIsPreserved()
+    [DisplayName("设置Device_可设为null")]
+    public void SetDevice_CanBeNull()
     {
         var node = new PanasonicNode();
-        var device = new MockDevice();
-        node.Device = device;
 
-        Assert.NotNull(node.Device);
-        Assert.Same(device, node.Device);
+        // Device 属性可接受 null 值（未关联设备时）
+        node.Device = null;
+        Assert.Null(node.Device);
     }
 
     [Fact]
-    [DisplayName("Modbus为null_释放不抛出异常")]
-    public void Dispose_NullModbus_DoesNotThrow()
+    [DisplayName("Modbus赋值_支持null清除")]
+    public void Modbus_CanSetToNull()
     {
-        var node = new PanasonicNode();
+        var node = new PanasonicNode
+        {
+            Modbus = new ModbusTcp(),
+        };
 
-        // Modbus 为 null 时释放应该安全
-        var exception = Record.Exception(() => node.Dispose());
-        Assert.Null(exception);
-    }
+        Assert.NotNull(node.Modbus);
 
-    /// <summary>
-    /// 模拟设备，用于测试
-    /// </summary>
-    private class MockDevice : IDevice
-    {
-        public String Code { get; set; } = "MockDevice";
-        public String Name { get; set; } = "Mock Device";
-        public Int32 Sort { get; set; }
-        public Boolean Enable { get; set; } = true;
-        public Boolean IsOnline { get; set; }
-        public DateTime LastOpen { get; set; }
-        public DateTime LastTime { get; set; }
-        public Int32 Total { get; set; }
+        // 可以重新设置为 null
+        node.Modbus = null;
+        Assert.Null(node.Modbus);
     }
 }

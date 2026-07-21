@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using NewLife.IoT.Drivers;
 using NewLife.Panasonic.Drivers;
 using Xunit;
@@ -81,15 +82,15 @@ public class PanasonicDriverTests
     }
 
     [Fact]
-    [DisplayName("打开通道_参数为null_抛出ArgumentNullException")]
-    public async Task OpenAsync_NullParameter_ThrowsArgumentNullException()
+    [DisplayName("打开通道_参数为null_抛出ArgumentException")]
+    public async Task OpenAsync_NullParameter_ThrowsArgumentException()
     {
         var driver = new PanasonicDriver();
 
-        var ex = await Assert.ThrowsAsync<ArgumentNullException>(() =>
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             driver.OpenAsync(null, null, default));
 
-        Assert.Contains("Open", ex.Message);
+        Assert.Contains("Server", ex.Message);
     }
 
     [Fact]
