@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using NewLife.Threading;
 using NewLife.IoT.Protocols;
 
 namespace NewLife.IoT.Drivers;
@@ -10,6 +11,29 @@ namespace NewLife.IoT.Drivers;
 [DisplayName("松下PLC")]
 public class PanasonicDriver : ModbusDriver, IDriver
 {
+    #region 属性
+    /// <summary>是否启用自动重连。默认 true</summary>
+    [Description("是否启用自动重连。默认 true")]
+    public Boolean AutoReconnect { get; set; } = true;
+
+    /// <summary>心跳间隔（秒）。定期检查连接状态，默认 30 秒</summary>
+    [Description("心跳间隔（秒）。定期检查连接状态，默认 30 秒")]
+    public Int32 HeartbeatInterval { get; set; } = 30;
+
+    /// <summary>最大重试次数。默认 3</summary>
+    [Description("最大重试次数。默认 3")]
+    public Int32 MaxRetries { get; set; } = 3;
+
+    /// <summary>重试间隔（毫秒）。默认 1000ms</summary>
+    [Description("重试间隔（毫秒）。默认 1000ms")]
+    public Int32 RetryInterval { get; set; } = 1000;
+
+    private TimerX _timer;
+    private Int32 _retryCount;
+    private IDevice _currentDevice;
+    private ModbusParameter _currentParameter;
+    #endregion
+
     #region 方法
     /// <summary>
     /// 创建Modbus通道
@@ -33,9 +57,106 @@ public class PanasonicDriver : ModbusDriver, IDriver
             Tracer = Tracer,
             Log = Log,
         };
-        //modbus.Init(parameters);
+
+        // 保存当前连接参数，用于断线重连
+        _currentDevice = device;
+        _currentParameter = parameter;
+
+        // 初始化心跳定时器
+        StartHeartbeat();
 
         return modbus;
+    }
+
+    /// <summary>
+    /// 启动心跳检测
+    /// </summary>
+    private void StartHeartbeat()
+    {
+        _timer.TryDispose();
+        _timer = null;
+
+        if (!AutoReconnect || HeartbeatInterval <= 0) return;
+
+        _timer = new TimerX(DoHeartbeat, null, HeartbeatInterval * 1000, HeartbeatInterval * 1000)
+        {
+            Async = true,
+        };
+    }
+
+    /// <summary>
+    /// 执行心跳检测
+    /// </summary>
+    /// <param name="state"></param>
+    private async Task DoHeartbeat(Object state)
+    {
+        var modbus = Modbus;
+        if (modbus == null) return;
+
+        try
+        {
+            // 尝试读取站号 1 地址 0 的 1 个保持寄存器，验证连接是否正常
+            using var source = new CancellationTokenSource(3000);
+            await modbus.ReadAsync(FunctionCodes.ReadRegister, 1, 0, 1, source.Token);
+
+            // 连接正常，重置重试计数
+            _retryCount = 0;
+        }
+        catch (Exception ex)
+        {
+            WriteLog("心跳检测失败：{0}", ex.Message);
+
+            if (!AutoReconnect) return;
+
+            // 尝试重连
+            await TryReconnect();
+        }
+    }
+
+    /// <summary>
+    /// 尝试重新连接
+    /// </summary>
+    private async Task TryReconnect()
+    {
+        if (_retryCount >= MaxRetries)
+        {
+            WriteLog("自动重连已达最大次数 {0}，停止重试", MaxRetries);
+            return;
+        }
+
+        _retryCount++;
+
+        WriteLog("正在尝试自动重连（第 {0}/{1} 次）...", _retryCount, MaxRetries);
+
+        try
+        {
+            // 关闭旧通道
+            var oldModbus = Modbus;
+            if (oldModbus != null)
+            {
+                await oldModbus.CloseAsync(default);
+                (oldModbus as IDisposable)?.Dispose();
+            }
+
+            // 使用保存的参数重新打开
+            if (_currentParameter != null)
+            {
+                var node = await OpenAsync(_currentDevice, _currentParameter, default);
+                if (node != null)
+                {
+                    WriteLog("自动重连成功");
+                    _retryCount = 0;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            WriteLog("自动重连失败：{0}", ex.Message);
+
+            // 等待重试间隔后再次尝试
+            if (_retryCount < MaxRetries)
+                await Task.Delay(RetryInterval);
+        }
     }
     #endregion
 }
