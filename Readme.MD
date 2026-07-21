@@ -36,6 +36,7 @@ var node = driver.Open(null, param);
 | [需求文档](Doc/需求文档.md) | 愿景、核心目标与功能需求 |
 | [功能清单](Doc/功能清单.md) | 实现/测试/注释三维状态追踪 |
 | [架构设计](Doc/架构设计.md) | 分层、组件、流程与设计决策 |
+| [竞品分析报告](Doc/竞品分析报告.md) | 竞品对比、功能矩阵、差距分析与建议 |
 
 源码： https://github.com/NewLifeX/NewLife.Panasonic  
 Nuget：NewLife.Panasonic  
