@@ -6,7 +6,7 @@
 ![Nuget](https://img.shields.io/nuget/v/NewLife.Panasonic?logo=nuget)
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/NewLife.Panasonic?label=dev%20nuget&logo=nuget)
 
-松下PLC协议。基于 NewLife.IoT 标准框架和 Modbus TCP 协议，为 .NET 应用提供松下 PLC 设备的通信驱动。
+松下PLC协议。基于 NewLife.IoT 标准框架，为 .NET 应用提供松下 PLC 设备的多种通信驱动（Modbus TCP / Modbus RTU / Mewtocol TCP）。
 
 ## 快速开始
 
@@ -14,9 +14,15 @@
 <PackageReference Include="NewLife.Panasonic" Version="1.0.*" />
 ```
 
+### Modbus TCP（通过 Modbus 网关连接）
+
 ```csharp
-// 创建驱动
-var driver = new PanasonicDriver();
+// 创建驱动（内建心跳检测和自动重连）
+var driver = new PanasonicDriver
+{
+    AutoReconnect = true,
+    HeartbeatInterval = 30,
+};
 
 // 配置参数
 var param = new PanasonicParameter
@@ -28,6 +34,50 @@ var param = new PanasonicParameter
 // 打开通道
 var node = driver.Open(null, param);
 ```
+
+### Modbus RTU（串口连接）
+
+```csharp
+// 创建串口驱动
+var driver = new PanasonicRtuDriver();
+
+// 配置串口参数
+var param = new PanasonicRtuParameter
+{
+    PortName = "COM3",
+    Baudrate = 9600,
+    DataBits = 8,
+    Host = 1,
+};
+
+// 打开通道
+var node = driver.Open(null, param);
+```
+
+### Mewtocol 原生协议（TCP 直连）
+
+```csharp
+// 创建 Mewtocol 驱动（适用于仅支持 Mewtocol 协议的松下 PLC）
+var driver = new MewtocolDriver();
+
+// 配置参数（默认端口 9094）
+var param = new MewtocolParameter
+{
+    Server = "192.168.1.100:9094",
+    Station = 1,
+};
+
+// 打开通道
+var node = await driver.OpenAsync(null, param);
+```
+
+## 驱动一览
+
+| 驱动 | 协议 | 连接方式 | 注册名 | 
+|------|------|----------|--------|
+| `PanasonicDriver` | Modbus TCP | 以太网（网关模式） | `PanasonicPLC` |
+| `PanasonicRtuDriver` | Modbus RTU | RS232/485 串口 | `PanasonicRTU` |
+| `MewtocolDriver` | Mewtocol 原生 | 以太网（直连 PLC） | `PanasonicMewtocol` |
 
 ## 文档
 
