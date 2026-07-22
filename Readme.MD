@@ -8,6 +8,13 @@
 
 松下PLC协议。基于 NewLife.IoT 标准框架，为 .NET 应用提供松下 PLC 设备的多种通信驱动（Modbus TCP / Modbus RTU / Mewtocol TCP）。
 
+## 亮点
+
+- **三协议合一**：同一驱动入口自动选择 Modbus TCP / Modbus RTU，Mewtocol 独立驱动，覆盖松下 PLC 主流通信场景
+- **连接可靠**：内建心跳检测和自动重连，适用于工业自动化场景
+- **生态协同**：基于 NewLife.IoT 标准接口，与 IoTEdge、ZeroIoT 平台即插即用
+- **MIT 许可**：最宽松开源许可，商业使用无限制
+
 ## 快速开始
 
 ```xml
