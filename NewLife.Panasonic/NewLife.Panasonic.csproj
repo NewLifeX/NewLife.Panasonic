@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;netstandard2.0;net461;net45</TargetFrameworks>
-    <AssemblyTitle>松下PLC协议</AssemblyTitle>
-    <Description>松下PLC协议</Description>
+    <AssemblyTitle>Panasonic PLC Protocol - 松下PLC协议</AssemblyTitle>
+    <Description>Panasonic PLC protocol library for .NET. Supports Modbus TCP, Modbus RTU, and Mewtocol native protocol for Panasonic PLC devices. Built on NewLife.IoT standard framework. 松下PLC通信协议库，支持Modbus TCP、Modbus RTU和Mewtocol原生协议，基于NewLife.IoT标准框架，为.NET应用提供松下PLC设备的多种通信驱动。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 新生命开发团队</Copyright>
     <VersionPrefix>1.0</VersionPrefix>
@@ -26,8 +26,9 @@
     <PackageIcon>leaf.png</PackageIcon>
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.Panasonic</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>物联网;IoT;边缘计算;Edge;新生命团队;NewLife;PLC;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageTags>物联网;IoT;边缘计算;Edge;新生命团队;NewLife;PLC;Panasonic;松下;Modbus;Mewtocol;$(AssemblyName)</PackageTags>
+    <PackageReleaseNotes>v1.0 Initial release. Support Modbus TCP, Modbus RTU and Mewtocol protocol for Panasonic PLC. 初始版本，支持松下PLC的Modbus TCP、Modbus RTU和Mewtocol协议。</PackageReleaseNotes>
+    <PackageReadmeFile>Readme.MD</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

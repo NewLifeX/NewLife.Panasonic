@@ -6,6 +6,8 @@
 ![Nuget](https://img.shields.io/nuget/v/NewLife.Panasonic?logo=nuget)
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/NewLife.Panasonic?label=dev%20nuget&logo=nuget)
 
+> **🌐 Language**: [English](Readme.en.md) | [Español](Readme.es.md) | [Deutsch](Readme.de.md) | [Français](Readme.fr.md) | [Português](Readme.pt-BR.md) | [Русский](Readme.ru.md) | [العربية](Readme.ar.md) | [한국어](Readme.ko.md) | [日本語](Readme.ja-JP.md) | [中文](Readme.MD)
+
 松下PLC协议。基于 NewLife.IoT 标准框架，为 .NET 应用提供松下 PLC 设备的多种通信驱动（Modbus TCP / Modbus RTU / Mewtocol TCP）。**全部功能已完成并通过测试验证。**
 
 ## 亮点
