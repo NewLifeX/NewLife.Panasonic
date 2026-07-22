@@ -177,7 +177,7 @@ public class MewtocolDriver : DriverBase, IDriver
     /// <param name="address">寄存器地址，如 DT100</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>寄存器值</returns>
-    public async Task<UInt16> ReadRegisterAsync(MewtocolNode node, String address, CancellationToken cancellationToken)
+    internal async Task<UInt16> ReadRegisterAsync(MewtocolNode node, String address, CancellationToken cancellationToken)
     {
         // RCP 命令：读取保持寄存器内容
         // 命令格式：%01#RCP{address}{count}\r
@@ -206,7 +206,7 @@ public class MewtocolDriver : DriverBase, IDriver
     /// <param name="value">写入值，范围 0x0000~0xFFFF</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>表示异步操作的任务</returns>
-    public async Task WriteRegisterAsync(MewtocolNode node, String address, UInt16 value, CancellationToken cancellationToken)
+    internal async Task WriteRegisterAsync(MewtocolNode node, String address, UInt16 value, CancellationToken cancellationToken)
     {
         // WCP 命令：写入保持寄存器
         // 命令格式：%01#WCP{address}{count}{data}\r
@@ -227,7 +227,7 @@ public class MewtocolDriver : DriverBase, IDriver
     /// <param name="address">触点地址，如 R0、Y0、X0 等</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>触点是否导通（true=导通）</returns>
-    public async Task<Boolean> ReadContactAsync(MewtocolNode node, String address, CancellationToken cancellationToken)
+    internal async Task<Boolean> ReadContactAsync(MewtocolNode node, String address, CancellationToken cancellationToken)
     {
         // RCS 命令：读取触点状态
         var cmd = $"RCS{address}0001";
@@ -250,7 +250,7 @@ public class MewtocolDriver : DriverBase, IDriver
     /// <param name="value">是否导通（true=导通，false=断开）</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>表示异步操作的任务</returns>
-    public async Task WriteContactAsync(MewtocolNode node, String address, Boolean value, CancellationToken cancellationToken)
+    internal async Task WriteContactAsync(MewtocolNode node, String address, Boolean value, CancellationToken cancellationToken)
     {
         // WCS 命令：写入触点状态
         var cmd = $"WCS{address}0001{(value ? "1" : "0")}";

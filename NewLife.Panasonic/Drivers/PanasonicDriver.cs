@@ -47,7 +47,7 @@ public class PanasonicDriver : ModbusDriver, IDriver
     private TimerX _timer;
     private Int32 _retryCount;
     private IDevice _currentDevice;
-    private ModbusParameter _currentParameter;
+    internal ModbusParameter _currentParameter;
 
     /// <summary>当前连接是否为 Modbus TCP 模式</summary>
     private Boolean _isTcpMode;
@@ -119,6 +119,8 @@ public class PanasonicDriver : ModbusDriver, IDriver
                 Log = Log,
             };
 
+            // 高级串口参数（如 Parity/StopBits/ByteTimeout）可通过 ModbusRtu 直接配置
+
             _isTcpMode = false;
 
             return modbus;
@@ -155,9 +157,10 @@ public class PanasonicDriver : ModbusDriver, IDriver
 
         try
         {
-            // 尝试读取站号 1 地址 0 的 1 个保持寄存器，验证连接是否正常
+            // 尝试读取保持寄存器，验证连接是否正常
+            var host = _currentParameter?.Host ?? (Byte)1;
             using var source = new CancellationTokenSource(3000);
-            await modbus.ReadAsync(FunctionCodes.ReadRegister, 1, 0, 1, source.Token);
+            await modbus.ReadAsync(FunctionCodes.ReadRegister, host, 0, 1, source.Token);
 
             // 连接正常，重置重试计数
             _retryCount = 0;

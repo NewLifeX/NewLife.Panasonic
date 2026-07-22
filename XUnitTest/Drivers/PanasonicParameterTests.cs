@@ -125,4 +125,6 @@ public class PanasonicParameterTests
         var param = new PanasonicParameter { Baudrate = 19200 };
         Assert.Equal(19200, param.Baudrate);
     }
+
+
 }
