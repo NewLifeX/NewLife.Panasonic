@@ -35,22 +35,19 @@ var param = new PanasonicParameter
 var node = driver.Open(null, param);
 ```
 
-### Modbus RTU（串口连接）
+### Modbus RTU（串口连接，同一驱动自动识别）
 
 ```csharp
-// 创建串口驱动
-var driver = new PanasonicRtuDriver();
-
-// 配置串口参数
-var param = new PanasonicRtuParameter
+// 同一驱动，填写串口参数即可自动使用 RTU 协议
+var driver = new PanasonicDriver();
+var param = new PanasonicParameter
 {
     PortName = "COM3",
     Baudrate = 9600,
-    DataBits = 8,
     Host = 1,
 };
 
-// 打开通道
+// 打开通道（驱动自动判断：PortName 非空 → Modbus RTU）
 var node = driver.Open(null, param);
 ```
 
@@ -75,8 +72,7 @@ var node = await driver.OpenAsync(null, param);
 
 | 驱动 | 协议 | 连接方式 | 注册名 | 
 |------|------|----------|--------|
-| `PanasonicDriver` | Modbus TCP | 以太网（网关模式） | `PanasonicPLC` |
-| `PanasonicRtuDriver` | Modbus RTU | RS232/485 串口 | `PanasonicRTU` |
+| `PanasonicDriver` | Modbus TCP / Modbus RTU | 以太网或串口（参数自动选择） | `PanasonicPLC` |
 | `MewtocolDriver` | Mewtocol 原生 | 以太网（直连 PLC） | `PanasonicMewtocol` |
 
 ## 文档

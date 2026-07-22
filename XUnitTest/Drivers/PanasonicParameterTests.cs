@@ -85,4 +85,44 @@ public class PanasonicParameterTests
         var param = new PanasonicParameter { Host = host };
         Assert.Equal(host, param.Host);
     }
+
+    [Fact]
+    [DisplayName("RTU参数_PortName默认值为null")]
+    public void RtuParameter_PortName_DefaultIsNull()
+    {
+        var param = new PanasonicParameter();
+        Assert.Null(param.PortName);
+    }
+
+    [Fact]
+    [DisplayName("RTU参数_Baudrate默认值为9600")]
+    public void RtuParameter_Baudrate_DefaultIs9600()
+    {
+        var param = new PanasonicParameter();
+        Assert.Equal(9600, param.Baudrate);
+    }
+
+    [Fact]
+    [DisplayName("RTU参数_DataBits默认值为8")]
+    public void RtuParameter_DataBits_DefaultIs8()
+    {
+        var param = new PanasonicParameter();
+        Assert.Equal(8, param.DataBits);
+    }
+
+    [Fact]
+    [DisplayName("RTU参数_PortName设置后保留")]
+    public void RtuParameter_PortName_SetAndPreserved()
+    {
+        var param = new PanasonicParameter { PortName = "COM3" };
+        Assert.Equal("COM3", param.PortName);
+    }
+
+    [Fact]
+    [DisplayName("RTU参数_Baudrate设置后保留")]
+    public void RtuParameter_Baudrate_SetAndPreserved()
+    {
+        var param = new PanasonicParameter { Baudrate = 19200 };
+        Assert.Equal(19200, param.Baudrate);
+    }
 }

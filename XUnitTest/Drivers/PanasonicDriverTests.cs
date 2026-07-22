@@ -82,15 +82,15 @@ public class PanasonicDriverTests
     }
 
     [Fact]
-    [DisplayName("打开通道_参数为null_抛出ArgumentException")]
-    public async Task OpenAsync_NullParameter_ThrowsArgumentException()
+    [DisplayName("打开通道_参数为null_抛出ArgumentNullException")]
+    public async Task OpenAsync_NullParameter_ThrowsArgumentNullException()
     {
         var driver = new PanasonicDriver();
 
-        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+        var ex = await Assert.ThrowsAsync<ArgumentNullException>(() =>
             driver.OpenAsync(null, null, default));
 
-        Assert.Contains("Server", ex.Message);
+        Assert.Equal("parameter", ex.ParamName);
     }
 
     [Fact]
@@ -121,5 +121,44 @@ public class PanasonicDriverTests
             driver.CloseAsync(null, default));
 
         Assert.Null(exception);
+    }
+
+    [Fact]
+    [DisplayName("打开通道_RTU参数_PortName为空_抛出ArgumentException")]
+    public async Task OpenAsync_RtuParameter_EmptyPortName_ThrowsArgumentException()
+    {
+        var driver = new PanasonicDriver();
+        var param = new PanasonicParameter
+        {
+            PortName = "",
+            Baudrate = 9600,
+        };
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            driver.OpenAsync(null, param, default));
+
+        Assert.NotNull(ex);
+    }
+
+    [Fact]
+    [DisplayName("打开通道_RTU参数_参数校验通过")]
+    public async Task OpenAsync_RtuParameter_ValidationPasses()
+    {
+        var driver = new PanasonicDriver();
+        var param = new PanasonicParameter
+        {
+            PortName = "COM_NONEXISTENT",
+            Baudrate = 9600,
+            Host = 1,
+        };
+
+        // 参数校验通过（PortName 非空），不抛出 ArgumentException
+        // 串口不存在时基类可能返回节点或抛出 IO 异常，不是参数校验层面的问题
+        var ex = await Record.ExceptionAsync(() =>
+            driver.OpenAsync(null, param, default));
+
+        // 如果抛出异常，不能是参数校验异常（表示分支逻辑正确）
+        if (ex != null)
+            Assert.IsNotType<ArgumentException>(ex);
     }
 }

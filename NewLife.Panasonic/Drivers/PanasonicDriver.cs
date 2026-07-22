@@ -1,23 +1,26 @@
 ﻿using System.ComponentModel;
+using NewLife.Panasonic.Drivers;
 using NewLife.Threading;
 using NewLife.IoT.Protocols;
+using NewLife.Serial.Protocols;
 
 namespace NewLife.IoT.Drivers;
 
 /// <summary>
-/// 松下PLC协议封装
+/// 松下PLC驱动。统一支持 Modbus TCP 和 Modbus RTU 两种连接方式，
+/// 根据 <see cref="PanasonicParameter"/> 中设置的字段自动选择协议。
 /// </summary>
 [Driver("PanasonicPLC")]
 [DisplayName("松下PLC")]
 public class PanasonicDriver : ModbusDriver, IDriver
 {
     #region 属性
-    /// <summary>是否启用自动重连。默认 true</summary>
-    [Description("是否启用自动重连。默认 true")]
+    /// <summary>是否启用自动重连。默认 true（仅 Modbus TCP 模式有效）</summary>
+    [Description("是否启用自动重连。默认 true（仅 Modbus TCP 模式有效）")]
     public Boolean AutoReconnect { get; set; } = true;
 
-    /// <summary>心跳间隔（秒）。定期检查连接状态，默认 30 秒</summary>
-    [Description("心跳间隔（秒）。定期检查连接状态，默认 30 秒")]
+    /// <summary>心跳间隔（秒）。定期检查连接状态，默认 30 秒（仅 Modbus TCP 模式有效）</summary>
+    [Description("心跳间隔（秒）。定期检查连接状态，默认 30 秒（仅 Modbus TCP 模式有效）")]
     public Int32 HeartbeatInterval { get; set; } = 30;
 
     /// <summary>最大重试次数。默认 3</summary>
@@ -32,11 +35,15 @@ public class PanasonicDriver : ModbusDriver, IDriver
     private Int32 _retryCount;
     private IDevice _currentDevice;
     private ModbusParameter _currentParameter;
+
+    /// <summary>当前连接是否为 Modbus TCP 模式</summary>
+    private Boolean _isTcpMode;
     #endregion
 
     #region 方法
     /// <summary>
-    /// 创建Modbus通道
+    /// 创建 Modbus 通道。根据参数中填写的字段自动选择协议：
+    /// Server 不为空 → Modbus TCP；PortName 不为空 → Modbus RTU
     /// </summary>
     /// <param name="device">逻辑设备</param>
     /// <param name="node">设备节点</param>
@@ -44,39 +51,67 @@ public class PanasonicDriver : ModbusDriver, IDriver
     /// <returns></returns>
     protected override Modbus CreateModbus(IDevice device, ModbusNode node, ModbusParameter parameter)
     {
-        var p = parameter as ModbusTcpParameter;
-        if (p == null || p.Server.IsNullOrEmpty()) throw new ArgumentException("参数中未指定地址Server");
+        var p = parameter as PanasonicParameter;
+        if (p == null) throw new ArgumentNullException(nameof(parameter));
 
-        node.Parameter = p;
-
-        var modbus = new ModbusTcp
+        // TCP 模式：Server 不为空
+        if (!p.Server.IsNullOrEmpty())
         {
-            Server = p.Server,
-            ProtocolId = p.ProtocolId,
+            node.Parameter = p;
 
-            Tracer = Tracer,
-            Log = Log,
-        };
+            var modbus = new ModbusTcp
+            {
+                Server = p.Server,
+                ProtocolId = p.ProtocolId,
 
-        // 保存当前连接参数，用于断线重连
-        _currentDevice = device;
-        _currentParameter = parameter;
+                Tracer = Tracer,
+                Log = Log,
+            };
 
-        // 初始化心跳定时器
-        StartHeartbeat();
+            // 保存当前连接参数，用于断线重连
+            _currentDevice = device;
+            _currentParameter = parameter;
+            _isTcpMode = true;
 
-        return modbus;
+            // 初始化心跳定时器（仅 TCP 模式）
+            StartHeartbeat();
+
+            return modbus;
+        }
+
+        // RTU 模式：PortName 不为空
+        if (!p.PortName.IsNullOrEmpty())
+        {
+            node.Parameter = p;
+
+            var modbus = new ModbusRtu
+            {
+                PortName = p.PortName,
+                Baudrate = p.Baudrate,
+                DataBits = p.DataBits,
+                Timeout = p.Timeout,
+
+                Tracer = Tracer,
+                Log = Log,
+            };
+
+            _isTcpMode = false;
+
+            return modbus;
+        }
+
+        throw new ArgumentException("必须指定 Server (Modbus TCP) 或 PortName (Modbus RTU)");
     }
 
     /// <summary>
-    /// 启动心跳检测
+    /// 启动心跳检测（仅 TCP 模式）
     /// </summary>
     private void StartHeartbeat()
     {
         _timer.TryDispose();
         _timer = null;
 
-        if (!AutoReconnect || HeartbeatInterval <= 0) return;
+        if (!AutoReconnect || HeartbeatInterval <= 0 || !_isTcpMode) return;
 
         _timer = new TimerX(DoHeartbeat, null, HeartbeatInterval * 1000, HeartbeatInterval * 1000)
         {
