@@ -42,6 +42,18 @@ public class PanasonicDriver : ModbusDriver, IDriver
 
     #region 方法
     /// <summary>
+    /// 创建驱动参数对象，可序列化成 Xml/Json 作为该协议的参数模板
+    /// </summary>
+    /// <returns></returns>
+    protected override IDriverParameter OnCreateParameter() => new PanasonicParameter
+    {
+        Server = "127.0.0.1:502",
+        Host = 1,
+        ReadCode = FunctionCodes.ReadRegister,
+        WriteCode = FunctionCodes.WriteRegister,
+    };
+
+    /// <summary>
     /// 创建 Modbus 通道。根据参数中填写的字段自动选择协议：
     /// Server 不为空 → Modbus TCP；PortName 不为空 → Modbus RTU
     /// </summary>
@@ -51,8 +63,7 @@ public class PanasonicDriver : ModbusDriver, IDriver
     /// <returns></returns>
     protected override Modbus CreateModbus(IDevice device, ModbusNode node, ModbusParameter parameter)
     {
-        var p = parameter as PanasonicParameter;
-        if (p == null) throw new ArgumentNullException(nameof(parameter));
+        if (parameter is not PanasonicParameter p) throw new ArgumentNullException(nameof(parameter));
 
         // TCP 模式：Server 不为空
         if (!p.Server.IsNullOrEmpty())

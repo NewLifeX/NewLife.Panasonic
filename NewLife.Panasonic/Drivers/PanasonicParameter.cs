@@ -5,9 +5,10 @@ namespace NewLife.Panasonic.Drivers;
 
 /// <summary>
 /// 松下PLC连接参数。统一支持 Modbus TCP 和 Modbus RTU 两种连接方式，
-/// 驱动根据已填字段自动选择协议（Server → TCP，PortName → RTU）
+/// 驱动根据已填字段自动选择协议（Server → TCP，PortName → RTU）。
+/// 实现 <see cref="IDriverParameterKey"/> 以支持驱动工厂的连接复用。
 /// </summary>
-public class PanasonicParameter : ModbusParameter
+public class PanasonicParameter : ModbusParameter, IDriverParameterKey
 {
     /// <summary>服务器地址。tcp地址如 127.0.0.1:502，填写此字段表示使用 Modbus TCP 协议</summary>
     [Description("服务器地址。tcp地址如 127.0.0.1:502，填写此字段表示使用 Modbus TCP 协议")]
@@ -28,4 +29,11 @@ public class PanasonicParameter : ModbusParameter
     /// <summary>数据位。默认 8</summary>
     [Description("数据位。默认 8")]
     public Int32 DataBits { get; set; } = 8;
+
+    /// <summary>
+    /// 获取唯一标识，用于驱动工厂判断是否可复用已有驱动实例。
+    /// TCP 模式返回 Server 地址，RTU 模式返回 PortName 串口名。
+    /// </summary>
+    /// <returns></returns>
+    public String GetKey() => !Server.IsNullOrEmpty() ? Server : PortName;
 }
