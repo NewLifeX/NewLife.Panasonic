@@ -84,4 +84,59 @@ public class MewtocolParameterTests
         var param = new MewtocolParameter();
         Assert.IsAssignableFrom<IDriverParameterKey>(param);
     }
+
+    #region 串口参数
+    [Fact]
+    [DisplayName("串口参数_默认值正确")]
+    public void SerialDefaults_AreCorrect()
+    {
+        var param = new MewtocolParameter();
+
+        Assert.Null(param.PortName);
+        Assert.Equal(9600, param.Baudrate);
+        Assert.Equal(8, param.DataBits);
+        Assert.Equal(System.IO.Ports.Parity.None, param.Parity);
+        Assert.Equal(System.IO.Ports.StopBits.One, param.StopBits);
+    }
+
+    [Fact]
+    [DisplayName("串口参数_设置值正确保留")]
+    public void SerialProperties_ValuesArePreserved()
+    {
+        var param = new MewtocolParameter
+        {
+            PortName = "COM3",
+            Baudrate = 19200,
+            DataBits = 7,
+            Parity = System.IO.Ports.Parity.Even,
+            StopBits = System.IO.Ports.StopBits.Two,
+        };
+
+        Assert.Equal("COM3", param.PortName);
+        Assert.Equal(19200, param.Baudrate);
+        Assert.Equal(7, param.DataBits);
+        Assert.Equal(System.IO.Ports.Parity.Even, param.Parity);
+        Assert.Equal(System.IO.Ports.StopBits.Two, param.StopBits);
+    }
+
+    [Fact]
+    [DisplayName("GetKey_串口模式_返回PortName")]
+    public void GetKey_SerialMode_ReturnsPortName()
+    {
+        var param = new MewtocolParameter { PortName = "COM1" };
+        Assert.Equal("COM1", param.GetKey());
+    }
+
+    [Fact]
+    [DisplayName("GetKey_Server优先_同时设置Server和PortName时返回Server")]
+    public void GetKey_ServerPriority_ReturnsServer()
+    {
+        var param = new MewtocolParameter
+        {
+            Server = "192.168.1.100:9094",
+            PortName = "COM1",
+        };
+        Assert.Equal("192.168.1.100:9094", param.GetKey());
+    }
+    #endregion
 }

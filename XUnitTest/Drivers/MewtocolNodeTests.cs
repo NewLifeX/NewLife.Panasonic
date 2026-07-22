@@ -81,4 +81,20 @@ public class MewtocolNodeTests
         var exception = Record.Exception(() => node.Dispose());
         Assert.Null(exception);
     }
+
+    [Fact]
+    [DisplayName("新节点_Serial属性默认null")]
+    public void NewNode_SerialDefaultNull()
+    {
+        var node = new MewtocolNode();
+        Assert.Null(node.Serial);
+    }
+
+    [Fact]
+    [DisplayName("新节点_未设置传输方式_IsConnected为False")]
+    public void NewNode_NoTransport_IsConnectedFalse()
+    {
+        var node = new MewtocolNode();
+        Assert.False(node.IsConnected);
+    }
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO.Ports;
 using System.Net.Sockets;
 using System.Text;
 using NewLife.IoT.ThingModels;
@@ -6,8 +7,11 @@ using NewLife.IoT.ThingModels;
 namespace NewLife.IoT.Drivers;
 
 /// <summary>
-/// 松下 Mewtocol 协议驱动。通过 Mewtocol 原生协议 TCP 通道与松下 PLC 通信，
-/// 覆盖仅支持 Mewtocol 协议的松下 PLC 型号（FP 系列等）
+/// 松下 Mewtocol 协议驱动。通过 Mewtocol 原生协议与松下 PLC 通信，
+/// 支持 TCP 和串口两种传输方式，覆盖仅支持 Mewtocol 协议的松下 PLC 型号（FP 系列等）。
+/// 根据 <see cref="MewtocolParameter"/> 中设置的字段自动选择传输方式：
+/// <see cref="MewtocolParameter.Server"/> 非空 → TCP 模式，
+/// <see cref="MewtocolParameter.PortName"/> 非空 → 串口模式。
 /// </summary>
 /// <remarks>
 /// Mewtocol 帧格式：
@@ -28,45 +32,74 @@ public class MewtocolDriver : DriverBase, IDriver
     protected override IDriverParameter OnCreateParameter() => new MewtocolParameter();
 
     /// <summary>
-    /// 打开通道，建立 TCP 连接
+    /// 打开通道，建立 TCP 或串口连接。根据参数自动选择传输方式：
+    /// Server 非空 → TCP 模式；PortName 非空 → 串口模式。
     /// </summary>
     /// <param name="device">逻辑设备</param>
     /// <param name="parameter">连接参数</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>设备节点</returns>
+    /// <exception cref="ArgumentException">Server 和 PortName 均为空时抛出</exception>
     public override async Task<INode> OpenAsync(IDevice device, IDriverParameter parameter, CancellationToken cancellationToken)
     {
         var p = parameter as MewtocolParameter;
-        if (p == null || p.Server.IsNullOrEmpty())
-            throw new ArgumentException("参数中未指定地址 Server");
+        if (p == null)
+            throw new ArgumentException("参数类型必须为 MewtocolParameter");
 
-        // 解析服务器地址和端口
-        var addr = p.Server;
-        var port = 9094; // Mewtocol 默认端口
-        if (addr.Contains(':'))
+        // 串口模式：PortName 不为空
+        if (!p.PortName.IsNullOrEmpty())
         {
-            var parts = addr.Split(':');
-            addr = parts[0];
-            if (parts.Length > 1 && Int32.TryParse(parts[1], out var p2))
-                port = p2;
+            var serial = new SerialPort(p.PortName, p.Baudrate, p.Parity, p.DataBits, p.StopBits);
+            serial.Open();
+
+            var node = new MewtocolNode
+            {
+                Serial = serial,
+                Stream = serial.BaseStream,
+                Driver = this,
+                Device = device,
+                Parameter = p,
+            };
+
+            WriteLog("Mewtocol 串口已打开：{0} (Baudrate={1}, DataBits={2}, Parity={3}, StopBits={4})",
+                p.PortName, p.Baudrate, p.DataBits, p.Parity, p.StopBits);
+
+            return node;
         }
 
-        // 创建 TCP 连接
-        var client = new TcpClient();
-        await client.ConnectAsync(addr, port);
-
-        var node = new MewtocolNode
+        // TCP 模式：Server 不为空
+        if (!p.Server.IsNullOrEmpty())
         {
-            Client = client,
-            Stream = client.GetStream(),
-            Driver = this,
-            Device = device,
-            Parameter = p,
-        };
+            // 解析服务器地址和端口
+            var addr = p.Server;
+            var port = 9094; // Mewtocol 默认端口
+            if (addr.Contains(':'))
+            {
+                var parts = addr.Split(':');
+                addr = parts[0];
+                if (parts.Length > 1 && Int32.TryParse(parts[1], out var p2))
+                    port = p2;
+            }
 
-        WriteLog("Mewtocol 连接已建立：{0}:{1}", addr, port);
+            // 创建 TCP 连接
+            var client = new TcpClient();
+            await client.ConnectAsync(addr, port);
 
-        return node;
+            var node = new MewtocolNode
+            {
+                Client = client,
+                Stream = client.GetStream(),
+                Driver = this,
+                Device = device,
+                Parameter = p,
+            };
+
+            WriteLog("Mewtocol TCP 连接已建立：{0}:{1}", addr, port);
+
+            return node;
+        }
+
+        throw new ArgumentException("必须指定 Server (TCP) 或 PortName (串口)");
     }
 
     /// <summary>
@@ -269,6 +302,70 @@ public class MewtocolDriver : DriverBase, IDriver
 
         var code = response.Substring(0, 1);
         if (code != "$") throw new InvalidOperationException($"Mewtocol 写入错误码: {code}");
+    }
+
+    /// <summary>
+    /// 读取 PLC 状态/错误码（HELP 命令）。
+    /// </summary>
+    /// <param name="node">已连接的 Mewtocol 节点</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>PLC 返回的状态码或错误信息字符串</returns>
+    /// <exception cref="ArgumentNullException">node 为 null 时抛出</exception>
+    public async Task<String> ReadStatusAsync(MewtocolNode node, CancellationToken cancellationToken)
+    {
+        if (node == null) throw new ArgumentNullException(nameof(node));
+
+        // HELP 命令（也兼容 H 简写）：读取 PLC 错误状态
+        var response = await SendCommandAsync(node, "HELP", cancellationToken);
+
+        // 响应格式：%01#01#${statusCode}{data}{checksum}\r
+        if (response.Length < 1) throw new InvalidOperationException("Mewtocol 状态读取无响应");
+
+        var code = response.Substring(0, 1);
+        if (code != "$") throw new InvalidOperationException($"Mewtocol 状态读取错误码: {code}");
+
+        // 返回 $ 之后的原始状态数据
+        return response.Substring(1);
+    }
+
+    /// <summary>
+    /// 切换 PLC 至运行模式（RUN 命令）。
+    /// </summary>
+    /// <param name="node">已连接的 Mewtocol 节点</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>表示异步操作的任务</returns>
+    /// <exception cref="ArgumentNullException">node 为 null 时抛出</exception>
+    public async Task SetRunModeAsync(MewtocolNode node, CancellationToken cancellationToken)
+    {
+        if (node == null) throw new ArgumentNullException(nameof(node));
+
+        // RUN 命令：切换至运行模式
+        var response = await SendCommandAsync(node, "RUN", cancellationToken);
+
+        if (response.Length < 1) throw new InvalidOperationException("Mewtocol RUN 命令无响应");
+
+        var code = response.Substring(0, 1);
+        if (code != "$") throw new InvalidOperationException($"Mewtocol RUN 命令错误码: {code}");
+    }
+
+    /// <summary>
+    /// 切换 PLC 至编程模式（PROG 命令）。
+    /// </summary>
+    /// <param name="node">已连接的 Mewtocol 节点</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>表示异步操作的任务</returns>
+    /// <exception cref="ArgumentNullException">node 为 null 时抛出</exception>
+    public async Task SetProgramModeAsync(MewtocolNode node, CancellationToken cancellationToken)
+    {
+        if (node == null) throw new ArgumentNullException(nameof(node));
+
+        // PROG 命令：切换至编程模式
+        var response = await SendCommandAsync(node, "PROG", cancellationToken);
+
+        if (response.Length < 1) throw new InvalidOperationException("Mewtocol PROG 命令无响应");
+
+        var code = response.Substring(0, 1);
+        if (code != "$") throw new InvalidOperationException($"Mewtocol PROG 命令错误码: {code}");
     }
 
     /// <summary>

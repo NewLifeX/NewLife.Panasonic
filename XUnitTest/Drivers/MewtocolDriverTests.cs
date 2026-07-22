@@ -51,12 +51,12 @@ public class MewtocolDriverTests
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             driver.OpenAsync(null, null, default));
 
-        Assert.Contains("Server", ex.Message);
+        Assert.Contains("MewtocolParameter", ex.Message);
     }
 
     [Fact]
-    [DisplayName("打开通道_参数Server为空_抛出ArgumentException")]
-    public async Task OpenAsync_EmptyServer_ThrowsArgumentException()
+    [DisplayName("打开通道_参数Server和PortName均为空_抛出ArgumentException")]
+    public async Task OpenAsync_EmptyServerAndPortName_ThrowsArgumentException()
     {
         var driver = new MewtocolDriver();
         var param = new MewtocolParameter
@@ -68,7 +68,26 @@ public class MewtocolDriverTests
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             driver.OpenAsync(null, param, default));
 
-        Assert.Contains("Server", ex.Message);
+        Assert.True(ex.Message.Contains("Server") || ex.Message.Contains("串口"));
+    }
+
+    [Fact]
+    [DisplayName("打开通道_仅指定PortName_尝试打开串口_抛出异常_因串口不存在")]
+    public async Task OpenAsync_PortNameOnly_ThrowsIOException()
+    {
+        var driver = new MewtocolDriver();
+        var param = new MewtocolParameter
+        {
+            PortName = "NONEXISTENT_COM",
+            Station = 1,
+        };
+
+        // 由于串口不存在，应抛出 IOException 或异常
+        var ex = await Assert.ThrowsAnyAsync<Exception>(() =>
+            driver.OpenAsync(null, param, default));
+
+        // 不应该说"必须指定Server"——因为PortName已指定，只是串口打不开
+        Assert.DoesNotContain("必须指定", ex.Message);
     }
 
     [Fact]
@@ -169,6 +188,44 @@ public class MewtocolDriverTests
 
         var result = method.Invoke(null, [address]) as Boolean?;
         Assert.Equal(expected, result);
+    }
+    #endregion
+
+    #region 高级命令测试
+    [Fact]
+    [DisplayName("ReadStatusAsync_节点为null_抛出ArgumentNullException")]
+    public async Task ReadStatusAsync_NullNode_ThrowsArgumentNullException()
+    {
+        var driver = new MewtocolDriver();
+
+        var ex = await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            driver.ReadStatusAsync(null, default));
+
+        Assert.Equal("node", ex.ParamName);
+    }
+
+    [Fact]
+    [DisplayName("SetRunModeAsync_节点为null_抛出ArgumentNullException")]
+    public async Task SetRunModeAsync_NullNode_ThrowsArgumentNullException()
+    {
+        var driver = new MewtocolDriver();
+
+        var ex = await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            driver.SetRunModeAsync(null, default));
+
+        Assert.Equal("node", ex.ParamName);
+    }
+
+    [Fact]
+    [DisplayName("SetProgramModeAsync_节点为null_抛出ArgumentNullException")]
+    public async Task SetProgramModeAsync_NullNode_ThrowsArgumentNullException()
+    {
+        var driver = new MewtocolDriver();
+
+        var ex = await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            driver.SetProgramModeAsync(null, default));
+
+        Assert.Equal("node", ex.ParamName);
     }
     #endregion
 }
