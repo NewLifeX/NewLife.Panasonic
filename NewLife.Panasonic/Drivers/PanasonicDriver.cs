@@ -10,6 +10,19 @@ namespace NewLife.IoT.Drivers;
 /// 松下PLC驱动。统一支持 Modbus TCP 和 Modbus RTU 两种连接方式，
 /// 根据 <see cref="PanasonicParameter"/> 中设置的字段自动选择协议。
 /// </summary>
+/// <remarks>
+/// 使用方式：
+/// TCP 模式：设置 <c>PanasonicParameter.Server</c>（如 "127.0.0.1:502"）
+/// RTU 模式：设置 <c>PanasonicParameter.PortName</c>（如 "COM3"）
+/// 驱动内建心跳检测（TimerX）和自动重连机制，仅 TCP 模式生效。
+/// </remarks>
+/// <example>
+/// <code>
+/// var driver = new PanasonicDriver();
+/// var param = new PanasonicParameter { Server = "127.0.0.1:502", Host = 1 };
+/// var node = driver.Open(null, param);
+/// </code>
+/// </example>
 [Driver("PanasonicPLC")]
 [DisplayName("松下PLC")]
 public class PanasonicDriver : ModbusDriver, IDriver
@@ -44,7 +57,7 @@ public class PanasonicDriver : ModbusDriver, IDriver
     /// <summary>
     /// 创建驱动参数对象，可序列化成 Xml/Json 作为该协议的参数模板
     /// </summary>
-    /// <returns></returns>
+    /// <returns>包含默认值的 PanasonicParameter 实例</returns>
     protected override IDriverParameter OnCreateParameter() => new PanasonicParameter
     {
         Server = "127.0.0.1:502",
@@ -57,10 +70,10 @@ public class PanasonicDriver : ModbusDriver, IDriver
     /// 创建 Modbus 通道。根据参数中填写的字段自动选择协议：
     /// Server 不为空 → Modbus TCP；PortName 不为空 → Modbus RTU
     /// </summary>
-    /// <param name="device">逻辑设备</param>
-    /// <param name="node">设备节点</param>
-    /// <param name="parameter">参数</param>
-    /// <returns></returns>
+    /// <param name="device">逻辑设备，可为 null</param>
+    /// <param name="node">设备节点，承载站号等运行时状态</param>
+    /// <param name="parameter">连接参数，必须是 <see cref="PanasonicParameter"/> 类型</param>
+    /// <returns>ModbusTcp 或 ModbusRtu 实例</returns>
     protected override Modbus CreateModbus(IDevice device, ModbusNode node, ModbusParameter parameter)
     {
         if (parameter is not PanasonicParameter p) throw new ArgumentNullException(nameof(parameter));
@@ -131,9 +144,10 @@ public class PanasonicDriver : ModbusDriver, IDriver
     }
 
     /// <summary>
-    /// 执行心跳检测
+    /// 执行心跳检测。发送 Modbus 读保持寄存器请求验证 TCP 连接是否正常，
+    /// 失败时触发自动重连。
     /// </summary>
-    /// <param name="state"></param>
+    /// <param name="state">TimerX 传递的状态参数，未使用</param>
     private async Task DoHeartbeat(Object state)
     {
         var modbus = Modbus;

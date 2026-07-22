@@ -22,8 +22,9 @@ public class MewtocolDriver : DriverBase, IDriver
 {
     #region 方法
     /// <summary>
-    /// 创建驱动参数
+    /// 创建驱动参数对象
     /// </summary>
+    /// <returns>默认配置的 MewtocolParameter 实例</returns>
     protected override IDriverParameter OnCreateParameter() => new MewtocolParameter();
 
     /// <summary>
@@ -129,8 +130,9 @@ public class MewtocolDriver : DriverBase, IDriver
     /// 写入数据
     /// </summary>
     /// <param name="node">设备节点</param>
-    /// <param name="requests">写入请求</param>
+    /// <param name="requests">写入请求，支持批量写入</param>
     /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>写入结果，包含成功写入的点数或错误信息</returns>
     public override async Task<WriteResult> WriteAsync(INode node, WriteRequest[] requests, CancellationToken cancellationToken)
     {
         if (node is not MewtocolNode mn)
@@ -201,8 +203,9 @@ public class MewtocolDriver : DriverBase, IDriver
     /// </summary>
     /// <param name="node">节点</param>
     /// <param name="address">寄存器地址，如 DT100</param>
-    /// <param name="value">写入值</param>
+    /// <param name="value">写入值，范围 0x0000~0xFFFF</param>
     /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>表示异步操作的任务</returns>
     public async Task WriteRegisterAsync(MewtocolNode node, String address, UInt16 value, CancellationToken cancellationToken)
     {
         // WCP 命令：写入保持寄存器
@@ -220,10 +223,10 @@ public class MewtocolDriver : DriverBase, IDriver
     /// <summary>
     /// 读取线圈/触点（RCS 命令）
     /// </summary>
-    /// <param name="node">节点</param>
-    /// <param name="address">触点地址，如 R0</param>
+    /// <param name="node">已连接的 Mewtocol 节点</param>
+    /// <param name="address">触点地址，如 R0、Y0、X0 等</param>
     /// <param name="cancellationToken">取消令牌</param>
-    /// <returns>是否导通</returns>
+    /// <returns>触点是否导通（true=导通）</returns>
     public async Task<Boolean> ReadContactAsync(MewtocolNode node, String address, CancellationToken cancellationToken)
     {
         // RCS 命令：读取触点状态
@@ -242,10 +245,11 @@ public class MewtocolDriver : DriverBase, IDriver
     /// <summary>
     /// 写入线圈/触点（WCS 命令）
     /// </summary>
-    /// <param name="node">节点</param>
-    /// <param name="address">触点地址，如 R0</param>
-    /// <param name="value">是否导通</param>
+    /// <param name="node">已连接的 Mewtocol 节点</param>
+    /// <param name="address">触点地址，如 R0、Y0、X0 等</param>
+    /// <param name="value">是否导通（true=导通，false=断开）</param>
     /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>表示异步操作的任务</returns>
     public async Task WriteContactAsync(MewtocolNode node, String address, Boolean value, CancellationToken cancellationToken)
     {
         // WCS 命令：写入触点状态
@@ -259,12 +263,15 @@ public class MewtocolDriver : DriverBase, IDriver
     }
 
     /// <summary>
-    /// 发送 Mewtocol 命令并接收响应
+    /// 发送 Mewtocol 命令并接收响应。
+    /// 自动构建帧（含头尾标记和校验和）、发送、接收完整响应帧、验证格式和校验和。
     /// </summary>
-    /// <param name="node">节点</param>
-    /// <param name="command">命令体（不含帧头帧尾）</param>
+    /// <param name="node">已连接的 Mewtocol 节点</param>
+    /// <param name="command">命令体（不含帧头帧尾和校验码），如 "RCPDT1000001"</param>
     /// <param name="cancellationToken">取消令牌</param>
-    /// <returns>响应数据（不含帧头帧尾和校验码）</returns>
+    /// <returns>响应数据（已去除帧头帧尾和校验码），正常响应首字符为 "$"</returns>
+    /// <exception cref="TimeoutException">响应超时（默认 5000ms）</exception>
+    /// <exception cref="InvalidOperationException">响应格式错误或校验和不匹配</exception>
     private async Task<String> SendCommandAsync(MewtocolNode node, String command, CancellationToken cancellationToken)
     {
         var p = node.Parameter as MewtocolParameter;
@@ -336,10 +343,10 @@ public class MewtocolDriver : DriverBase, IDriver
     }
 
     /// <summary>
-    /// 计算 Mewtocol 校验和（XOR 所有字节，格式化为 2 字符十六进制大写）
+    /// 计算 Mewtocol 校验和。对输入字符串每个字节做 XOR，结果格式化为 2 字符十六进制大写。
     /// </summary>
-    /// <param name="data">要计算校验和的数据</param>
-    /// <returns>2 字符校验和</returns>
+    /// <param name="data">要计算校验和的数据（不含帧头 % 和帧尾 \r）</param>
+    /// <returns>2 字符十六进制校验和，如 "3F"</returns>
     private static String CalcChecksum(String data)
     {
         Byte xor = 0;

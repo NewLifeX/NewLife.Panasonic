@@ -7,6 +7,6 @@ namespace NewLife.IoT.Drivers;
 /// </summary>
 public class PanasonicNode : ModbusNode
 {
-    /// <summary>Modbus对象</summary>
+    /// <summary>Modbus 通信对象。指向驱动创建的 ModbusTcp 或 ModbusRtu 实例</summary>
     public Modbus Modbus { get; set; }
 }

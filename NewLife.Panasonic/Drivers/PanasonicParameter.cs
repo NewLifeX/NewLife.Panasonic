@@ -32,8 +32,9 @@ public class PanasonicParameter : ModbusParameter, IDriverParameterKey
 
     /// <summary>
     /// 获取唯一标识，用于驱动工厂判断是否可复用已有驱动实例。
-    /// TCP 模式返回 Server 地址，RTU 模式返回 PortName 串口名。
+    /// TCP 模式返回 Server 地址（同地址共用一个 TCP 连接），
+    /// RTU 模式返回 PortName 串口名（同串口共用一个串口实例）。
     /// </summary>
-    /// <returns></returns>
+    /// <returns>Server 地址（TCP）或 PortName 串口名（RTU）；两者均为空时返回 null</returns>
     public String GetKey() => !Server.IsNullOrEmpty() ? Server : PortName;
 }
