@@ -6,7 +6,7 @@
 ![Nuget](https://img.shields.io/nuget/v/NewLife.Panasonic?logo=nuget)
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/NewLife.Panasonic?label=dev%20nuget&logo=nuget)
 
-松下PLC协议。基于 NewLife.IoT 标准框架，为 .NET 应用提供松下 PLC 设备的多种通信驱动（Modbus TCP / Modbus RTU / Mewtocol TCP）。
+松下PLC协议。基于 NewLife.IoT 标准框架，为 .NET 应用提供松下 PLC 设备的多种通信驱动（Modbus TCP / Modbus RTU / Mewtocol TCP）。**全部功能已完成并通过测试验证。**
 
 ## 亮点
 
@@ -86,10 +86,10 @@ var node = await driver.OpenAsync(null, param);
 
 | 文档 | 说明 |
 |------|------|
-| [需求文档](Doc/需求文档.md) | 愿景、核心目标与功能需求 |
-| [功能清单](Doc/功能清单.md) | 实现/测试/注释三维状态追踪 |
-| [架构设计](Doc/架构设计.md) | 分层、组件、流程与设计决策 |
-| [竞品分析报告](Doc/竞品分析报告.md) | 竞品对比、功能矩阵、差距分析与建议 |
+| [功能说明](Doc/需求文档.md) | 愿景、核心功能与能力边界（v3.0） |
+| [功能清单](Doc/功能清单.md) | 全部 6 个功能点已完成（v3.0） |
+| [架构设计](Doc/架构设计.md) | 分层、组件、流程与设计决策（v3.0） |
+| [竞品分析报告](Doc/竞品分析报告.md) | 竞品对比、功能矩阵、差距分析与建议（v3.0） |
 
 源码： https://github.com/NewLifeX/NewLife.Panasonic  
 Nuget：NewLife.Panasonic  
