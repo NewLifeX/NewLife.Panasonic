@@ -161,4 +161,56 @@ public class PanasonicDriverTests
         if (ex != null)
             Assert.IsNotType<ArgumentException>(ex);
     }
+
+    #region 心跳与重连测试
+    [Fact]
+    [DisplayName("心跳_AutoReconnect默认true")]
+    public void AutoReconnect_DefaultIsTrue()
+    {
+        var driver = new PanasonicDriver();
+        Assert.True(driver.AutoReconnect);
+    }
+
+    [Fact]
+    [DisplayName("心跳_HeartbeatInterval默认30秒")]
+    public void HeartbeatInterval_DefaultIs30()
+    {
+        var driver = new PanasonicDriver();
+        Assert.Equal(30, driver.HeartbeatInterval);
+    }
+
+    [Fact]
+    [DisplayName("重连_MaxRetries默认3")]
+    public void MaxRetries_DefaultIs3()
+    {
+        var driver = new PanasonicDriver();
+        Assert.Equal(3, driver.MaxRetries);
+    }
+
+    [Fact]
+    [DisplayName("重连_RetryInterval默认1000ms")]
+    public void RetryInterval_DefaultIs1000()
+    {
+        var driver = new PanasonicDriver();
+        Assert.Equal(1000, driver.RetryInterval);
+    }
+
+    [Fact]
+    [DisplayName("心跳_属性可设置后保留")]
+    public void HeartbeatProperties_CanBeSet()
+    {
+        var driver = new PanasonicDriver
+        {
+            AutoReconnect = false,
+            HeartbeatInterval = 60,
+            MaxRetries = 5,
+            RetryInterval = 2000,
+        };
+
+        Assert.False(driver.AutoReconnect);
+        Assert.Equal(60, driver.HeartbeatInterval);
+        Assert.Equal(5, driver.MaxRetries);
+        Assert.Equal(2000, driver.RetryInterval);
+    }
+    #endregion
 }

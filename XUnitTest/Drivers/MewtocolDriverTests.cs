@@ -124,4 +124,51 @@ public class MewtocolDriverTests
         Assert.NotNull(result);
         Assert.IsType<MewtocolParameter>(result);
     }
+
+    #region 校验和测试
+    [Theory]
+    [DisplayName("校验和_已知输入_XOR校验和正确")]
+    [InlineData("", "00")]
+    [InlineData("01#01#RCPDT1000001", "61")]
+    [InlineData("01#01#$", "24")]
+    [InlineData("01#01#RCSS00001", "20")]
+    [InlineData("01#01#WCPDT1000010001", "55")]
+    [InlineData("01#01#WCSR00011", "25")]
+    public void CalcChecksum_KnownInputs(String input, String expected)
+    {
+        var method = typeof(MewtocolDriver).GetMethod("CalcChecksum",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var result = method.Invoke(null, [input]) as String;
+        Assert.Equal(expected, result);
+    }
+    #endregion
+
+    #region 地址类型判断测试
+    [Theory]
+    [DisplayName("地址判断_触点类地址返回true")]
+    [InlineData("R0", true)]
+    [InlineData("Y1", true)]
+    [InlineData("X10", true)]
+    [InlineData("L100", true)]
+    [InlineData("T5", true)]
+    [InlineData("C99", true)]
+    [InlineData("S0", true)]
+    [InlineData("DT100", false)]
+    [InlineData("D100", false)]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData("R", false)]
+    [InlineData("XY100", false)]
+    public void IsContactAddress_Detection(String address, Boolean expected)
+    {
+        var method = typeof(MewtocolDriver).GetMethod("IsContactAddress",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var result = method.Invoke(null, [address]) as Boolean?;
+        Assert.Equal(expected, result);
+    }
+    #endregion
 }

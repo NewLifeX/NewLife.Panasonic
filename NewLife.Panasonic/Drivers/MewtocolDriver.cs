@@ -90,7 +90,8 @@ public class MewtocolDriver : DriverBase, IDriver
     }
 
     /// <summary>
-    /// 读取数据
+    /// 读取数据。根据地址前缀自动选择 RCP（寄存器）或 RCS（触点）命令。
+    /// 触点类地址（R/Y/X/L/T/C/S 开头）走 RCS，其余走 RCP。
     /// </summary>
     /// <param name="node">设备节点</param>
     /// <param name="points">点位集合</param>
@@ -112,8 +113,16 @@ public class MewtocolDriver : DriverBase, IDriver
             {
                 // 根据点位地址类型选择命令
                 var address = point.Address ?? point.Name;
-                var value = await ReadRegisterAsync(mn, address, cancellationToken);
-                values[i] = value;
+                if (IsContactAddress(address))
+                {
+                    var contactValue = await ReadContactAsync(mn, address, cancellationToken);
+                    values[i] = contactValue;
+                }
+                else
+                {
+                    var registerValue = await ReadRegisterAsync(mn, address, cancellationToken);
+                    values[i] = registerValue;
+                }
             }
             catch (Exception ex)
             {
@@ -347,13 +356,33 @@ public class MewtocolDriver : DriverBase, IDriver
     /// </summary>
     /// <param name="data">要计算校验和的数据（不含帧头 % 和帧尾 \r）</param>
     /// <returns>2 字符十六进制校验和，如 "3F"</returns>
-    private static String CalcChecksum(String data)
+    internal static String CalcChecksum(String data)
     {
         Byte xor = 0;
         foreach (var ch in data)
             xor ^= (Byte)ch;
 
         return xor.ToString("X2");
+    }
+
+    /// <summary>Mewtocol 触点类地址前缀</summary>
+    private static readonly String[] _contactPrefixes = ["R", "Y", "X", "L", "T", "C", "S"];
+
+    /// <summary>
+    /// 判断地址是否为触点类地址。触点类使用 RCS/WCS 命令，寄存器类使用 RCP/WCP 命令。
+    /// </summary>
+    /// <param name="address">点位地址，如 "DT100"、"R0"、"Y1"</param>
+    /// <returns>true 表示触点类地址，false 表示寄存器类地址</returns>
+    internal static Boolean IsContactAddress(String address)
+    {
+        if (address.IsNullOrEmpty()) return false;
+
+        foreach (var prefix in _contactPrefixes)
+        {
+            if (address.StartsWith(prefix) && address.Length > prefix.Length && Char.IsDigit(address[prefix.Length]))
+                return true;
+        }
+        return false;
     }
     #endregion
 
